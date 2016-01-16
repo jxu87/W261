@@ -1,0 +1,206 @@
+slcli vs create --datacenter=sjc01 --domain=mids.proj --hostname=spark1 --os=CENTOS_LATEST_64 --cpu=2 --memory=4096 --disk=100 --network=1000 --billing=hourly --key w251
+
+slcli vs create --datacenter=sjc01 --domain=mids.proj --hostname=spark2 --os=CENTOS_LATEST_64 --cpu=2 --memory=4096 --disk=100 --network=1000 --billing=hourly --key w251
+
+slcli vs create --datacenter=sjc01 --domain=mids.proj --hostname=spark3 --os=CENTOS_LATEST_64 --cpu=2 --memory=4096 --disk=100 --network=1000 --billing=hourly --key w251
+
+:..........:..........:..............:..............:............:........:
+:    id    : hostname :  primary_ip  :  backend_ip  : datacenter : action :
+:..........:..........:..............:..............:............:........:
+: 15117201 :  spark1  : 50.23.64.186 : 10.54.203.77 :   sjc01    :   -    :
+: 15117213 :  spark2  : 50.23.64.188 : 10.54.203.66 :   sjc01    :   -    :
+: 15117217 :  spark3  : 50.23.64.189 : 10.54.203.67 :   sjc01    :   -    :
+:..........:..........:..............:..............:............:........:
+
+yum install nano
+
+nano /etc/hosts
+
+127.0.0.1 localhost.localdomain localhost
+50.23.64.186 spark1.mids.proj spark1
+50.23.64.188 spark2.mids.proj spark2
+50.23.64.189 spark3.mids.proj spark3
+
+for i in spark1 spark2 spark3; do ssh-copy-id $i; done
+
+ssh root@50.23.64.186
+CMqZrcM8
+
+ssh root@50.23.64.188
+Cu3B9Vv8
+
+ssh root@50.23.64.189
+Xu6PJXhr
+
+HADOOP SETUP:
+Install Java: Install Java 8 on CentOS/RHEL 7/6/5
+Install JDK:
+wget --no-cookies --no-check-certificate --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/8u40-b25/jdk-8u40-linux-x64.tar.gz"
+tar xvf /root/jdk-8u40-linux-x64.tar.gz
+mkdir mkdir /usr/java
+mv /root/jdk1.8.0_40 /usr/java/
+
+alternatives --install /usr/bin/java java /usr/java/jdk1.8.0_40/bin/java 2 
+alternatives --install /usr/bin/javaws javaws /usr/java/jdk1.8.0_40/bin/javaws 2 
+alternatives --install /usr/bin/javac javac /usr/java/jdk1.8.0_40/bin/javac 2 
+alternatives --install /usr/bin/jar jar /usr/java/jdk1.8.0_40/bin/jar 2 
+alternatives --install /usr/bin/jps jps /usr/java/jdk1.8.0_40/bin/jps 2
+
+adduser hadoop
+passwd hadoop
+
+su - hadoop
+ssh-keygen -t rsa
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+chmod 0600 ~/.ssh/authorized_keys
+
+ssh localhost
+exit
+
+cd ~
+wget http://apache.claz.org/hadoop/common/hadoop-2.6.0/hadoop-2.6.0.tar.gz
+tar xzf hadoop-2.6.0.tar.gz
+mv hadoop-2.6.0 hadoop
+
+nano ~/.bashrc
+
+export HADOOP_HOME=/root/hadoop/
+export HADOOP_INSTALL=$HADOOP_HOME
+export HADOOP_MAPRED_HOME=$HADOOP_HOME
+export HADOOP_COMMON_HOME=$HADOOP_HOME
+export HADOOP_HDFS_HOME=$HADOOP_HOME
+export YARN_HOME=$HADOOP_HOME
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin
+
+source ~/.bashrc
+
+nano $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+export JAVA_HOME=/usr/java/jdk1.8.0_40/
+
+cd $HADOOP_HOME/etc/hadoop
+
+nano core-site.xml
+
+<configuration>
+<property>
+  <name>fs.default.name</name>
+    <value>hdfs://localhost:9000</value>
+</property>
+</configuration>
+
+nano hdfs-site.xml
+
+<configuration>
+<property>
+ <name>dfs.replication</name>
+ <value>1</value>
+</property>
+
+<property>
+  <name>dfs.name.dir</name>
+    <value>file:///home/hadoop/hadoopdata/hdfs/namenode</value>
+</property>
+
+<property>
+  <name>dfs.data.dir</name>
+    <value>file:///home/hadoop/hadoopdata/hdfs/datanode</value>
+</property>
+</configuration>
+
+nano mapred-site.xml.template
+
+<configuration>
+ <property>
+  <name>mapreduce.framework.name</name>
+   <value>yarn</value>
+ </property>
+</configuration>
+
+nano yarn-site.xml
+
+<configuration>
+ <property>
+  <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+ </property>
+</configuration>
+
+hdfs namenode -format
+SHUTDOWN_MSG: Shutting down NameNode at swift.w251jx.com/198.11.209.202
+
+STARTING HADOOP CLUSTER
+cd $HADOOP_HOME/sbin/
+start-dfs.sh
+start-yarn.sh
+http://50.23.64.186:50070/
+http://50.23.64.186:8088/
+
+cd /root/hadoop/bin
+cd /hadoop/bin
+hdfs dfs -mkdir /user
+hdfs dfs -mkdir /user/hadoop
+hdfs dfs -put /var/log/httpd logs
+hdfs dfs -put /root train.csv
+hdfs getconf -confKey dfs.blocksize
+
+http://50.23.64.186:50070/explorer.html#/user/hadoop
+
+http://hortonworks.com/hadoop-tutorial/using-commandline-manage-files-hdfs/
+
+hadoop-daemon.sh start datanode
+hadoop fs -put /root/train.csv /user/hadoop/test
+hadoop dfs -rmr /user/hadoop/test/train.csv
+hadoop fs -get /<hdfs path> /<local machime path>   
+
+stop-all.sh
+rm -Rf /app/tmp/hadoop-hadoop/*
+rm -Rf /app/tmp/hadoop-root/*
+
+INSTALL SPARK:
+curl https://bintray.com/sbt/rpm/rpm | sudo tee /etc/yum.repos.d/bintray-sbt-rpm.repo
+yum install -y java-1.8.0-openjdk-headless sbt
+$JAVA_HOME/bin/java -version
+curl http://d3kbcqa49mib13.cloudfront.net/spark-1.5.0-bin-hadoop2.6.tgz | tar -zx -C /usr/local --show-transformed --transform='s,/*[^/]*,spark,'
+echo export SPARK_HOME=\"/usr/local/spark\" >> /root/.bash_profile
+source /root/.bash_profile
+
+nano $SPARK_HOME/conf/slaves
+spark1
+spark2
+spark3
+
+nano $SPARK_HOME/conf/slaves.template
+spark1
+spark2
+spark3
+
+sbin/start-master.sh - Starts a master instance on the machine the script is executed on
+sbin/start-slaves.sh - Starts a slave instance on each machine specified in the conf/slaves file
+sbin/start-all.sh - Starts both a master and a number of slaves as described above
+sbin/stop-master.sh - Stops the master that was started via the bin/start-master.sh script
+sbin/stop-slaves.sh - Stops all slave instances on the machines specified in the conf/slaves file
+sbin/stop-all.sh - Stops both the master and the slaves as described above
+
+$SPARK_HOME/sbin/start-master.sh
+$SPARK_HOME/sbin/start-slaves.sh
+$SPARK_HOME/bin/run-example SparkPi
+$SPARK_HOME/bin/spark-submit $SPARK_HOME/examples/src/main/python/pi.py
+
+Spark Shell:
+$SPARK_HOME/bin/spark-shell
+val textFile = sc.textFile("README.md")
+textFile.count()
+textFile.first()
+val linesWithSpark = textFile.filter(line => line.contains("Spark"))
+
+SBT TEST:
+sbt
+find target -iname "*.jar"
+target/scala-2.10/simple-project_2.10-1.0.jar
+
+$SPARK_HOME/bin/spark-submit --class "SimpleApp" \
+--master spark://50.23.64.186:7077 \
+target/scala-2.10/simple-project_2.10-1.0.jar
+
+http://50.23.64.186:8080/
