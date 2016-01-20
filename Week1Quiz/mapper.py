@@ -8,6 +8,6 @@ findword = sys.argv[1]
 with open (filename, "r") as myfile:
 #Please insert your code
     for line in myfile.readlines():
-        if findword in line:
+        if findword.lower() in line.lower():
             count+=1
 print count
