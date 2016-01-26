@@ -1,12 +1,1 @@
-Class conditional: SPAM, assistance 0.000755770013371
-Class conditional: HAM, assistance 0.000164758217316
-assistance SPAM Prior = 0.438775510204
-assistance HAM Prior = 0.561224489796
-Class conditional: SPAM, valium 0.000174408464624
-Class conditional: HAM, valium N/A
-valium SPAM Prior = 0.438775510204
-valium HAM Prior = 0.561224489796
-Class conditional: SPAM, enlargementWithATypo N/A
-Class conditional: HAM, enlargementWithATypo N/A
-enlargementWithATypo SPAM Prior = 0.438775510204
-enlargementWithATypo HAM Prior = 0.561224489796
+10
