@@ -7,11 +7,18 @@ ssh localhost
 ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa
 cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
 
+ssh-keygen -t rsa -P "" –f $HOME/.ssh/id_rsa
+cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
+cat ~/.ssh/id_rsa.pub | ssh JingXu@100.64.26.163 'cat >> $HOME/.ssh/authorized_keys'
+cat ~/.ssh/id_dsa.pub | ssh JingXu@100.64.26.163 'cat >> $HOME/.ssh/authorized_keys'
+
 download and unpack hadoop distribution
 
 /usr/libexec/java_home --> /Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home
 
 cd /Users/JingXu/Documents/hadoop-2.6.3
+
+nano /etc/hosts
 
 nano etc/hadoop/hadoop-env.sh
 # set to the root of your Java installation
@@ -59,9 +66,11 @@ Start namenode/datanodes/yarn:
 
 sbin/start-dfs.sh
 http://localhost:50070/
-bin/hdfs dfs -mkdir /user
+bin/hdfs dfs -mkdir /user http://localhost:50070/
 bin/hdfs dfs -mkdir /user/jing
 sbin/start-yarn.sh
+
+rm -Rf /tmp/hadoop-JingXu/*
 
 Test code:
 bin/hdfs dfs -put etc/hadoop input

@@ -1,0 +1,1 @@
+hadoop protected static enum MyCounter { INPUT_WORDS };

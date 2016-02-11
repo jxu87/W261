@@ -1,0 +1,183 @@
+AWS Account ID: 5470-7767-9358
+Canonical User ID: b759fe973fd50fb986c2ac4b0638c3222c36f8443879fc430dbd26827c9dc2e4
+
+Access Key ID:
+AKIAJPLUPUXK6X4BPR7A
+Secret Access Key: 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
+
+http://insightdataengineering.com/blog/hadoopdevops/
+
+https://www.eduonix.com/blog/bigdata-and-hadoop/a-step-by-step-guide-to-install-hadoop-cluster-on-amazon-ec2/
+
+namenode ec2-52-24-244-5.us-west-2.compute.amazonaws.com 52.24.244.5
+datanode1 ec2-52-36-32-71.us-west-2.compute.amazonaws.com 52.36.32.71
+datanode2 ec2-52-33-138-222.us-west-2.compute.amazonaws.com 52.33.138.222
+datanode3 ec2-52-27-248-11.us-west-2.compute.amazonaws.com 52.27.248.11
+
+sudo chmod 600 ~/.ssh/w261.pem
+
+ssh -i ~/.ssh/w261.pem ec2-user@ec2-52-24-244-5.us-west-2.compute.amazonaws.com
+
+nano ~/.ssh/config
+
+Host namenode
+  HostName ec2-52-24-244-5.us-west-2.compute.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/w261.pem
+
+Host datanode1
+  HostName ec2-52-36-32-71.us-west-2.compute.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/w261.pem
+
+Host datanode2
+  HostName ec2-52-33-138-222.us-west-2.compute.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/w261.pem
+
+Host datanode3
+  HostName ec2-52-27-248-11.us-west-2.compute.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/w261.pem
+
+
+scp ~/.ssh/w261.pem ~/.ssh/config namenode:~/.ssh
+
+ssh namenode
+
+ssh-keygen -f ~/.ssh/id_rsa -t rsa -P ""
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+cat ~/.ssh/id_rsa.pub | ssh datanode1 'cat >> ~/.ssh/authorized_keys'
+cat ~/.ssh/id_rsa.pub | ssh datanode2 'cat >> ~/.ssh/authorized_keys'
+cat ~/.ssh/id_rsa.pub | ssh datanode3 'cat >> ~/.ssh/authorized_keys'
+
+ssh ec2-user@ec2-52-36-32-71.us-west-2.compute.amazonaws.com
+
+sudo su - 
+yum update
+
+wget http://apache.mirrors.tds.net/hadoop/common/hadoop-2.7.1/hadoop-2.7.1.tar.gz -P ~/Downloads
+sudo tar zxvf ~/Downloads/hadoop-* -C /home/ec2-user
+sudo mv /home/ec2-user/hadoop-* /usr/local/hadoop
+
+nano ~/.bashrc
+
+export JAVA_HOME=/usr/java/jdk1.8.0_40/
+export PATH=$PATH:$JAVA_HOME/bin
+
+export HADOOP_HOME=/usr/local/hadoop
+export PATH=$PATH:$HADOOP_HOME/bin
+
+export HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
+
+nano $HADOOP_CONF_DIR/hadoop-env.sh
+JAVA_HOME=/usr
+
+
+nano $HADOOP_CONF_DIR/core-site.xml
+<configuration>
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://ec2-52-24-244-5.us-west-2.compute.amazonaws.com 52.24.244.5:9000</value>
+  </property>
+</configuration>
+
+nano $HADOOP_CONF_DIR/yarn-site.xml
+<configuration>
+
+<!-- Site specific YARN configuration properties -->
+
+  <property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+  </property> 
+  <property>
+    <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+    <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>ec2-52-24-244-5.us-west-2.compute.amazonaws.com</value>
+  </property>
+</configuration>
+
+cp $HADOOP_CONF_DIR/mapred-site.xml.template $HADOOP_CONF_DIR/mapred-site.xml
+
+nano $HADOOP_CONF_DIR/mapred-site.xml
+<configuration>
+  <property>
+    <name>mapreduce.jobtracker.address</name>
+    <value>ec2-52-24-244-5.us-west-2.compute.amazonaws.com:54311</value>
+  </property>
+  <property>
+    <name>mapreduce.framework.name</name>
+    <value>yarn</value>
+  </property>
+</configuration>
+
+echo $(hostname)
+ip-172-31-35-234
+ip-172-31-35-233
+ip-172-31-35-236
+ip-172-31-35-235
+
+172.31.35.234
+172.31.35.233
+172.31.35.236
+172.31.35.235
+
+nano /etc/hosts
+127.0.0.1 localhost
+ec2-52-24-244-5.us-west-2.compute.amazonaws.com ip-172-31-35-234
+ec2-52-36-32-71.us-west-2.compute.amazonaws.com ip-172-31-35-233
+ec2-52-33-138-222.us-west-2.compute.amazonaws.com ip-172-31-35-236
+ec2-52-27-248-11.us-west-2.compute.amazonaws.com ip-172-31-35-235
+
+NAMENODE ONLY:
+nano $HADOOP_CONF_DIR/hdfs-site.xml
+<configuration>
+  <property>
+    <name>dfs.replication</name>
+    <value>3</value>
+  </property>
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file:///usr/local/hadoop/hadoop_data/hdfs/namenode</value>
+  </property>
+</configuration>
+
+mkdir -p $HADOOP_HOME/hadoop_data/hdfs/namenode
+
+nano $HADOOP_CONF_DIR/masters
+ip-172-31-35-234
+
+nano $HADOOP_CONF_DIR/slaves
+ip-172-31-35-233
+ip-172-31-35-236
+ip-172-31-35-235
+
+chown -R ec2-user $HADOOP_HOME
+
+DATANODES ONLY:
+nano $HADOOP_CONF_DIR/hdfs-site.xml
+<configuration>
+  <property>
+    <name>dfs.replication</name>
+    <value>3</value>
+  </property>
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>file:///usr/local/hadoop/hadoop_data/hdfs/datanode</value>
+  </property>
+</configuration>
+
+mkdir -p $HADOOP_HOME/hadoop_data/hdfs/datanode
+
+chown -R ec2-user $HADOOP_HOME
+
+FROM NAMENODE:
+sudo su -
+hdfs namenode -format  <-- THIS DELETES ALL PREVIOUS DATA
+$HADOOP_HOME/sbin/start-dfs.sh
+
+ec2-52-24-244-5.us-west-2.compute.amazonaws.com:50070
