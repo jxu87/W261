@@ -48,7 +48,7 @@ class TopVisitor(MRJob):
             for line in f:
                 cell = csv_readline(line)
                 if cell[1] == page:
-                    key = "{0:>20}  |  {1:>5}  |  {2:>5}".format(cell[4],page,self.top_page_visitor[page][0]) #yield top page visitor
+                    key = "{0:>4}|{1:>5}|".format(page,self.top_page_visitor[page][0]) 
                     break
         yield key, self.top_page_visitor[page][1]
 
