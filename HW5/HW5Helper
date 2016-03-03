@@ -1,0 +1,26 @@
+
+Access Key ID:
+AKIAIR5LKAHYDXMPIMMA
+Secret Access Key:
+TZWhwMqGGrXAqoeMLJ304UUm94twI4IQcGYUJICU
+
+https://github.com/Yelp/mrjob/blob/master/mrjob/job.py
+
+logging folder: s3://aws-logs-547077679358-us-west-1/elasticmapreduce/
+
+
+cp w261.pem ~/.ssh
+chmod og-rwx ~/.ssh/w261.pem
+
+nano mrjob_261jing.conf
+runners:
+  emr:
+    ec2_key_pair: EMR
+    ec2_key_pair_file: /path/to/EMR.pem # ~/ and $ENV_VARS allowed here
+    ssh_tunnel_to_job_tracker: true
+ec2_instance_type: m1.medium
+ec2_master_instance_type: m1.medium
+num_ec2_instances: 4
+
+
+python <script name> -r emr --conf-path mrjob_261jing.conf s3://filtered-5grams/ --output-dir=s3://w61jing
